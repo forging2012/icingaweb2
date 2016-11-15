@@ -4,7 +4,8 @@
 namespace Icinga\Module\Translation\Catalog;
 
 use ArrayAccess;
-
+use Exception;
+use InvalidArgumentException;
 
 /**
  * Class CatalogHeader
@@ -41,7 +42,20 @@ class CatalogHeader implements ArrayAccess
      */
     public static function fromString($header)
     {
+        $lines = explode("\n", $header);
+        $headers = array();
+        foreach ($lines as $line)
+        {
+            try {
+                list($key, $value) = explode(': ', $line, 2);
+            } catch (Exception $_) {
+                throw new InvalidArgumentException('Missing ": " in "' . $line . '"');
+            }
 
+            $headers[$key] = $value;
+        }
+
+        return new CatalogHeader($headers);
     }
 
     /**

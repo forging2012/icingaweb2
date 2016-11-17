@@ -14,12 +14,12 @@ use InvalidArgumentException;
  */
 class CatalogEntry
 {
-
     protected $obsolete;
     protected $messageContext;
     protected $messageId;
     protected $messageIdPlural;
     protected $message;
+    protected $messagePlurals;
     protected $previousMessageContext;
     protected $previousMessageId;
     protected $previousMessageIdPlural;
@@ -28,17 +28,18 @@ class CatalogEntry
     protected $paths;
     protected $flags;
 
-
     /**
      * Create a new CatalogEntry
      *
-     * @param   string $messageId The untranslated message
-     * @param   string $message The translated message
-     * @param   string $messageContext The message's context
+     * @param   string  $messageId      The untranslated message
+     * @param   string  $message        The translated message
+     * @param   string  $messageContext The message's context
      */
     public function __construct($messageId, $message, $messageContext = null)
     {
-
+        $this->messageId = $messageId;
+        $this->message = $message;
+        $this->messageContext = $messageContext;
     }
 
     /**
@@ -52,8 +53,8 @@ class CatalogEntry
      */
     public static function fromArray(array $entry)
     {
-        if (isset($entry['msgid']) && isset($entry['msgstr'][0])) {
-            throw new InvalidArgumentException();
+        if (! isset($entry['msgid']) || ! isset($entry['msgstr'][0])) {
+            throw new InvalidArgumentException('Message id and a message are required to create a catalog entry');
         }
 
         $catalogEntry = new static(
@@ -73,7 +74,10 @@ class CatalogEntry
                     $catalogEntry->setMessageIdPlural($value);
                     break;
                 case 'msgstr':
-                    $catalogEntry->setMessage($value);
+                    unset($value[0]);
+                    if (! empty($value)) {
+                        $catalogEntry->setMessagePlurals($value);
+                    }
                     break;
                 case 'previous_msgctxt':
                     $catalogEntry->setPreviousMessageContext($value);
@@ -88,16 +92,18 @@ class CatalogEntry
                     $catalogEntry->setTranslatorComments($value);
                     break;
                 case 'extracted_comments':
+                    $catalogEntry->setExtractedComments($value);
                     break;
                 case 'paths':
+                    $catalogEntry->setPaths($value);
                     break;
                 case 'flags':
+                    $catalogEntry->setFlags($value);
                     break;
             }
         }
 
         return $catalogEntry;
-
     }
 
     /**
@@ -107,14 +113,14 @@ class CatalogEntry
      *
      * @return  $this
      */
-    public function setObsolete($state)
+    public function setObsolete($state = true)
     {
         $this->obsolete = $state;
         return $this;
     }
 
     /**
-     * Get whether this CatalogEntry is obsolete
+     * Return whether this CatalogEntry is obsolete
      *
      * @return bool
      */
@@ -126,18 +132,18 @@ class CatalogEntry
     /**
      * Set the plural message id for this CatalogEntry
      *
-     * @param   string  $messageIdPluralValue
+     * @param   string  $messageIdPlural
      *
      * @return  $this
      */
-    public function setMessageIdPlural($messageIdPluralValue)
+    public function setMessageIdPlural($messageIdPlural)
     {
-        $this->messageIdPlural = $messageIdPluralValue;
+        $this->messageIdPlural = $messageIdPlural;
         return $this;
     }
 
     /**
-     * Get the plural message id for this CatalogEntry
+     * Return the plural message id for this CatalogEntry
      *
      * @return string
      */
@@ -147,47 +153,47 @@ class CatalogEntry
     }
 
     /**
-     * Set the message for this CatalogEntry
+     * Set the plural messages for this CatalogEntry
      *
-     * @param   array   $messageValue
+     * @param   array   $messagePlurals
      *
      * @return  $this
      */
-    public function setMessage($messageValue)
+    public function setMessagePlurals(array $messagePlurals)
     {
-        $this->message = $messageValue;
+        $this->messagePlurals = $messagePlurals;
         return $this;
     }
 
     /**
-     * Get the message for this CatalogEntry
+     * Return the plural messages for this CatalogEntry
      *
-     * @return mixed
+     * @return array
      */
-    public function getMessage()
+    public function getMessagePlurals()
     {
-        return $this->message;
+        return $this->messagePlurals;
     }
 
     /**
      * Set the previous message context for this CatalogEntry
      *
-     * @param   string  $previousMessageContextValue
+     * @param   string  $previousMessageContext
      *
      * @return  $this
      */
-    public function setPreviousMessageContext($previousMessageContextValue)
+    public function setPreviousMessageContext($previousMessageContext)
     {
-        $this->previousMessageContext = $previousMessageContextValue;
+        $this->previousMessageContext = $previousMessageContext;
         return $this;
     }
 
     /**
-     * Get the previous message context for this CatalogEntry
+     * Return the previous message context for this CatalogEntry
      *
      * @return  string
      */
-    public function getPreviousMessageContent()
+    public function getPreviousMessageContext()
     {
         return $this->previousMessageContext;
     }
@@ -195,18 +201,18 @@ class CatalogEntry
     /**
      * Set the previous message id for this CatalogEntry
      *
-     * @param   string  $previousMessageIdValue
+     * @param   string  $previousMessageId
      *
      * @return  $this
      */
-    public function setPreviousMessageId($previousMessageIdValue)
+    public function setPreviousMessageId($previousMessageId)
     {
-        $this->previousMessageId = $previousMessageIdValue;
+        $this->previousMessageId = $previousMessageId;
         return $this;
     }
 
     /**
-     * Get the previous message id for this CatalogEntry
+     * Return the previous message id for this CatalogEntry
      *
      * @return string
      */
@@ -218,18 +224,18 @@ class CatalogEntry
     /**
      * Set the previous plural message id for this CatalogEntry
      *
-     * @param   string  $previousMessageIdPluralValue
+     * @param   string  $previousMessageIdPlural
      *
      * @return  $this
      */
-    public function setPreviousMessageIdPlural($previousMessageIdPluralValue)
+    public function setPreviousMessageIdPlural($previousMessageIdPlural)
     {
-        $this->previousMessageIdPlural = $previousMessageIdPluralValue;
+        $this->previousMessageIdPlural = $previousMessageIdPlural;
         return $this;
     }
 
     /**
-     * Get the previous plural message id for this CatalogEntry
+     * Return the previous plural message id for this CatalogEntry
      *
      * @return string
      */
@@ -241,18 +247,18 @@ class CatalogEntry
     /**
      * Set translator comments for this CatalogEntry
      *
-     * @param   array   $translatorCommentsValue
+     * @param   array   $translatorComments
      *
      * @return  $this
      */
-    public function setTranslatorComments($translatorCommentsValue)
+    public function setTranslatorComments(array $translatorComments)
     {
-        $this->translatorComments = $translatorCommentsValue;
+        $this->translatorComments = $translatorComments;
         return $this;
     }
 
     /**
-     * Get translator comments for this CatalogEntry
+     * Return translator comments for this CatalogEntry
      *
      * @return array
      */
@@ -264,18 +270,18 @@ class CatalogEntry
     /**
      * Set extracted comments for this CatalogEntry
      *
-     * @param   array   $extractedCommentsValue
+     * @param   array   $extractedComments
      *
      * @return  $this
      */
-    public function setExtractedComments($extractedCommentsValue)
+    public function setExtractedComments(array $extractedComments)
     {
-        $this->extractedComments = $extractedCommentsValue;
+        $this->extractedComments = $extractedComments;
         return $this;
     }
 
     /**
-     * Get extracted comments for this CatalogEntry
+     * Return extracted comments for this CatalogEntry
      *
      * @return array
      */
@@ -287,18 +293,18 @@ class CatalogEntry
     /**
      * Set paths for this CatalogEntry
      *
-     * @param   array   $pathsValue
+     * @param   array   $paths
      *
      * @return  $this
      */
-    public function setPaths($pathsValue)
+    public function setPaths(array $paths)
     {
-        $this->paths = $pathsValue;
+        $this->paths = $paths;
         return $this;
     }
 
     /**
-     * Get paths for this CatalogEntry
+     * Return paths for this CatalogEntry
      *
      * @return array
      */
@@ -310,18 +316,18 @@ class CatalogEntry
     /**
      * Set flags for this CatalogEntry
      *
-     * @param   array   $flagsValue
+     * @param   array   $flags
      *
      * @return  $this
      */
-    public function setFlags($flagsValue)
+    public function setFlags(array $flags)
     {
-        $this->flags = $flagsValue;
+        $this->flags = $flags;
         return $this;
     }
 
     /**
-     * Get flags for this CatalogEntry
+     * Return flags for this CatalogEntry
      *
      * @return array
      */
@@ -357,7 +363,17 @@ class CatalogEntry
      */
     public function isFaulty()
     {
+        $numberOfPlaceHoldersInId = substr_count($this->messageId, '%s');
 
+        foreach ($this->messagePlurals as $key => $value)
+        {
+            if (substr_count($value, '%s') !== $numberOfPlaceHoldersInId)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
